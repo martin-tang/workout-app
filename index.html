@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="./assets/favicon.png" />
+  <title>WorkoutBuddy</title>
+  <meta name="description" content="Generate personalized workout plans targeting the muscle groups you want to train. Sign up to save your history and track progress." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="panel">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="brand-block">
+          <h1 class="brand">
+            Workout<span>Buddy</span>
+            <span class="brand-dot" aria-hidden="true"></span>
+          </h1>
+          <span class="welcome-chip" id="welcome-chip" hidden></span>
+        </div>
+
+        <div class="header-actions" id="header-actions">
+          <!-- Rendered by js/main.js depending on auth state -->
+        </div>
+      </header>
+
+      <p class="app-sub" id="app-sub">
+        Select muscle groups to generate a workout plan. Sign up to save your workouts and track your progress!
+      </p>
+
+      <!-- Muscle group grid -->
+      <form id="planner-form">
+        <div class="muscle-grid" id="muscle-grid"></div>
+
+        <div class="submit-row">
+          <button type="submit" class="btn btn--primary btn--lg" id="generate-btn" disabled>
+            <span id="generate-label">Generate Workout Plan</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Workout plan result -->
+      <section class="plan" id="plan" hidden>
+        <div class="plan__header">
+          <h2>Your Custom Workout Plan</h2>
+        </div>
+        <div id="plan-body"></div>
+        <div class="plan__guest-note" id="plan-guest-note" hidden>
+          <p><strong>Sign up</strong> to save your workouts and track your progress!</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===== Instructions modal ===== -->
+  <div class="modal" id="instructions-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="instructions"></div>
+    <div class="modal__panel modal__panel--sm" role="dialog" aria-modal="true">
+      <div class="modal__body center-body">
+        <div class="icon-badge icon-badge--lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+        <h2 class="modal-title">Welcome to WorkoutBuddy!</h2>
+        <ol class="steps">
+          <li><span class="step-num">1</span><p>Click on as many muscle groups as you want to target</p></li>
+          <li><span class="step-num">2</span><p>Selected groups will be highlighted with a green border</p></li>
+          <li><span class="step-num">3</span><p>Click "Generate Workout Plan" to create your personalized routine</p></li>
+        </ol>
+        <button class="btn btn--primary btn--block btn--lg" data-close="instructions">Get Started &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Auth modal ===== -->
+  <div class="modal" id="auth-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="auth"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal-title" id="auth-modal-title">Welcome Back</h2>
+        <button class="modal__close" data-close="auth" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <!-- Login form -->
+        <div id="login-view">
+          <div class="center-body" style="margin-bottom: 1.5rem;">
+            <div class="icon-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </div>
+            <p class="muted">Sign in to your account</p>
+          </div>
+          <p class="form-error" id="login-error" hidden></p>
+          <form id="login-form" class="stack">
+            <div class="field">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" name="email" required />
+              <p class="field-error" id="login-email-error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" name="password" required />
+              <p class="field-error" id="login-password-error" hidden></p>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">
+              <span>Sign In</span>
+            </button>
+          </form>
+          <p class="switch-mode">Don't have an account? <button type="button" id="to-register" class="link-btn">Sign up</button></p>
+        </div>
+
+        <!-- Register form -->
+        <div id="register-view" hidden>
+          <div class="center-body" style="margin-bottom: 1.5rem;">
+            <div class="icon-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+            </div>
+            <p class="muted">Join us to track your fitness journey</p>
+          </div>
+          <p class="form-error" id="register-error" hidden></p>
+          <form id="register-form" class="stack">
+            <div class="grid-2">
+              <div class="field">
+                <label for="reg-username">Username *</label>
+                <input type="text" id="reg-username" name="username" required />
+                <p class="field-error" id="reg-username-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="reg-email">Email Address *</label>
+                <input type="email" id="reg-email" name="email" required />
+                <p class="field-error" id="reg-email-error" hidden></p>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="reg-firstName">First Name</label>
+                <input type="text" id="reg-firstName" name="firstName" />
+              </div>
+              <div class="field">
+                <label for="reg-lastName">Last Name</label>
+                <input type="text" id="reg-lastName" name="lastName" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="reg-password">Password *</label>
+                <input type="password" id="reg-password" name="password" required />
+                <p class="field-error" id="reg-password-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="reg-confirmPassword">Confirm Password *</label>
+                <input type="password" id="reg-confirmPassword" name="confirmPassword" required />
+                <p class="field-error" id="reg-confirmPassword-error" hidden></p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="reg-fitnessLevel">Fitness Level</label>
+              <select id="reg-fitnessLevel" name="fitnessLevel">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fitness Goals (optional)</label>
+              <div class="checkbox-grid" id="reg-goals"></div>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block btn--lg">
+              <span>Create Account</span>
+            </button>
+          </form>
+          <p class="switch-mode">Already have an account? <button type="button" id="to-login" class="link-btn">Sign in</button></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Settings modal ===== -->
+  <div class="modal" id="settings-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="settings"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal-title">Settings</h2>
+        <button class="modal__close" data-close="settings" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <p class="form-success" id="settings-success" hidden></p>
+        <p class="form-error" id="settings-error" hidden></p>
+        <form id="settings-form" class="stack">
+          <div>
+            <h3 class="subhead">Personal Information</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label for="set-firstName">First Name</label>
+                <input type="text" id="set-firstName" name="firstName" />
+              </div>
+              <div class="field">
+                <label for="set-lastName">Last Name</label>
+                <input type="text" id="set-lastName" name="lastName" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="subhead">Fitness Level</h3>
+            <div class="radio-stack" id="set-levels"></div>
+          </div>
+          <div>
+            <h3 class="subhead">Fitness Goals</h3>
+            <p class="muted small">Select all that apply (optional)</p>
+            <div class="checkbox-grid" id="set-goals"></div>
+          </div>
+          <div class="modal-footer-row">
+            <button type="button" class="btn btn--ghost" data-close="settings">Cancel</button>
+            <button type="submit" class="btn btn--primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Dashboard modal ===== -->
+  <div class="modal" id="dashboard-modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="dashboard"></div>
+    <div class="modal__panel modal__panel--lg" role="dialog" aria-modal="true">
+      <div class="modal__header">
+        <div>
+          <h2 class="modal-title" id="dashboard-title">Welcome back!</h2>
+          <p class="muted small">Track your fitness journey</p>
+        </div>
+        <button class="modal__close" data-close="dashboard" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div id="dashboard-list-view">
+          <div class="dashboard-toolbar">
+            <h3 class="subhead" style="margin:0;">Your Workouts</h3>
+            <div class="filter-tabs" id="dashboard-filters">
+              <button type="button" class="filter-tab is-active" data-filter="all">All</button>
+              <button type="button" class="filter-tab" data-filter="completed">Completed</button>
+              <button type="button" class="filter-tab" data-filter="pending">Pending</button>
+            </div>
+          </div>
+          <div id="dashboard-content"></div>
+        </div>
+        <div id="dashboard-detail-view" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/instructions.js"></script>
+  <script src="./js/authModal.js"></script>
+  <script src="./js/settingsModal.js"></script>
+  <script src="./js/dashboard.js"></script>
+  <script src="./js/planner.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
